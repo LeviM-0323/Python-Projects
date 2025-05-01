@@ -1,6 +1,4 @@
 streamlit
 numpy
 pandas
-dotenv
-os
-time
+python-dotenv
