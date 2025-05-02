@@ -10,18 +10,17 @@ st.set_page_config(
     page_icon="🧠",
 )
 
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    st.error("OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable.")
-    st.stop()
-
-client = OpenAI(api_key=api_key)
-
-st.title("🧠 Prompt Playground")
-st.divider()
 st.sidebar.title("Prompt Playground")
 st.sidebar.markdown("Simple OpenAI API key web app for generating images or completing text prompts")
 st.sidebar.divider()
+api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+
+client = None
+if api_key:
+    client = OpenAI(api_key=api_key)
+
+st.title("🧠 Prompt Playground")
+st.divider()
 prompt = st.text_area("Enter your prompt:", height=75)
 temperature = st.slider("Temperature:", 0.0, 1.0, 0.7)
 max_tokens = st.slider("Max tokens,", 10, 1000, 350)
@@ -29,7 +28,9 @@ max_tokens = st.slider("Max tokens,", 10, 1000, 350)
 task_type = st.radio("Select task type:", ["Text Completion", "Image Generation"])
 
 if st.button("Run Prompt"):
-    if not prompt.strip():
+    if not api_key:
+        st.error("Please enter your OpenAI API key in the sidebar.")
+    elif not prompt.strip():
         st.warning("Please enter a prompt.")
     else:
         with st.spinner("Processings..."):
