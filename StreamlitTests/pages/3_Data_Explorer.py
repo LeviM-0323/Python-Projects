@@ -8,6 +8,8 @@ st.set_page_config(
 )
 
 st.title("📊 Data Explorer")
+st.sidebar.title("Data Explorer")
+st.sidebar.markdown("Explore your CSV data with visualizations in this Streamlit app.")
 st.markdown("Upload a CSV file to explore and visualize your data.")
 
 uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
