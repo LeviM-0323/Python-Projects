@@ -26,7 +26,7 @@ if uploaded_file:
 
     if st.button("Generate Plot"):
         fig, ax = plt.subplots()
-        ax.scatter(df[x_axis], df[y_axis]. alpha=0.7)
+        ax.scatter(df[x_axis], df[y_axis], alpha=0.7)
         ax.set_xlabel(x_axis)
         ax.set_ylabel(y_axis)
         ax.set_title(f"{y_axis} vs {x_axis}")
