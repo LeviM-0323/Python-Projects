@@ -13,7 +13,7 @@ RUN git clone --depth 1 https://github.com/LeviM-0323/Python-Projects.git || \
     (cd Python-Projects && git pull)
 
 # RUN pip3 install -r requirements.txt
-RUN pip3 install streamlit numpy pandas python-dotenv openai plotly
+RUN pip3 install streamlit numpy pandas python-dotenv openai plotly matplotlib
 
 EXPOSE 8501
 
