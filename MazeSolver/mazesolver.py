@@ -5,14 +5,15 @@ import time
 from collections import deque
 
 # Colors and constants
-DARK_BG = "#1e1e1e"
-DARK_GRID = "#2d2d2d"
-WALL_COLOR = "#444"
-PATH_COLOR = "#1f77b4"
-START_COLOR = "#3fb950"
-END_COLOR = "#e5534b"
-VISITED_COLOR = "#6c6c6c"
-FINAL_PATH_COLOR = "#f0e442"
+DARK_BG = "#2b2b2b"
+DARK_GRID = "#3c3c3c"
+WALL_COLOR = "#1e1e1e"
+PATH_COLOR = "#4caf50"
+START_COLOR = "#ff9800"
+END_COLOR = "#f44336"
+VISITED_COLOR = "#2196f3"
+FINAL_PATH_COLOR = "#ffeb3b"
+CURRENT_NODE_COLOR = "#e91e63"
 
 CELL_SIZE = 20
 DELAY = 20
@@ -276,6 +277,14 @@ class MazeApp:
         self.visited_label = tk.Label(master, text="Nodes Visited: --", bg=self.bg_color, fg=self.text_color)
         self.visited_label.grid(row=3, column=1, sticky="ew", padx=10, pady=5)
 
+        # Speed slider
+        self.speed_label = tk.Label(master, text="Speed Control", bg=self.bg_color, fg=self.text_color)
+        self.speed_label.grid(row=4, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
+
+        self.speed_slider = tk.Scale(master, from_=1, to=200, orient="horizontal", bg=self.bg_color, fg=self.text_color, highlightthickness=0, command=self.update_delay)
+        self.speed_slider.set(DELAY)
+        self.speed_slider.grid(row=5, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
+
         # Radio Buttons
         self.radio_label = tk.Label(master, text="Solver Algorihtm", bg=self.bg_color, fg=self.text_color)
         self.radio_label.grid(row=1, column=2, sticky="ew", padx=10, pady=5)
@@ -299,6 +308,10 @@ class MazeApp:
 
         self.generate_maze()
 
+    def update_delay(self, value):
+        global DELAY
+        DELAY = int(value)
+
     def generate_maze(self):
         algorithm = self.generation_algorithm.get()
         if algorithm == "rbt":
@@ -315,20 +328,32 @@ class MazeApp:
             print("Unkown generation algorithm selected.")
         
     def animate_kruskals_generation(self):
+        if not hasattr(self, 'kruskals_start_time'):
+            self.kruskals_start_time = time.perf_counter()
+            self.generation_status_label.config(text="Status: Generating maze...")
         if self.maze.generate_kruskals_step():
             self.draw_maze()
             self.master.after(DELAY, self.animate_kruskals_generation)
         else:
+            elapsed = (time.perf_counter() - self.kruskals_start_time) * 1000
+            self.generation_time_label.config(text=f"Generation Time: {elapsed:.2f} ms")
             self.generation_status_label.config(text="Status: Done!")
+            del self.kruskals_start_time
             self.maze.randomize_start_end()
             self.draw_maze()
 
     def animate_prims_generation(self):
+        if not hasattr(self, 'prims_start_time'):
+            self.prims_start_time = time.perf_counter()
+            self.generation_status_label.config(text="Status: Generating maze...")
         if self.maze.generate_prims_step():
             self.draw_maze()
             self.master.after(DELAY, self.animate_prims_generation)
         else:
+            elapsed = (time.perf_counter() - self.prims_start_time) * 1000
+            self.generation_time_label.config(text=f"Generation Time: {elapsed:.2f} ms")
             self.generation_status_label.config(text="Status: Done!")
+            del self.prims_start_time
             self.maze.randomize_start_end()
             self.draw_maze()
 
@@ -362,6 +387,9 @@ class MazeApp:
 
         if self.maze.generate_step():
             self.draw_maze()
+            if self.maze.stack:
+                x, y = self.maze.stack[-1]
+                self._draw_cell(x, y, CURRENT_NODE_COLOR)
             self.master.after(DELAY, self.animate_maze_generation)
         else:
             elapsed = (time.perf_counter() - self.generation_start_time) * 1000
