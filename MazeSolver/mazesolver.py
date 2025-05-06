@@ -5,17 +5,26 @@ import time
 from collections import deque
 
 # Colors and constants
+LIGHT_BG = "#ffffff"
+LIGHT_GRID = "#cccccc"
+LIGHT_WALL_COLOR = "#000000"
+LIGHT_PATH_COLOR = "#e0e0e0"
+LIGHT_START_COLOR = "#00bcd4"
+LIGHT_END_COLOR = "#ff5722"
+LIGHT_VISITED_COLOR = "#9c27b0"
+LIGHT_FINAL_PATH_COLOR = "#ffc107"
+LIGHT_CURRENT_NODE_COLOR = "#3f51b5"
 DARK_BG = "#2b2b2b"
 DARK_GRID = "#3c3c3c"
-WALL_COLOR = "#1e1e1e"
-PATH_COLOR = "#4caf50"
-START_COLOR = "#ff9800"
-END_COLOR = "#f44336"
-VISITED_COLOR = "#2196f3"
-FINAL_PATH_COLOR = "#ffeb3b"
-CURRENT_NODE_COLOR = "#e91e63"
+DARK_WALL_COLOR = "#1e1e1e"
+DARK_PATH_COLOR = "#4caf50"
+DARK_START_COLOR = "#ff9800"
+DARK_END_COLOR = "#f44336"
+DARK_VISITED_COLOR = "#2196f3"
+DARK_FINAL_PATH_COLOR = "#ffeb3b"
+DARK_CURRENT_NODE_COLOR = "#e91e63"
 
-CELL_SIZE = 20
+CELL_SIZE = 10
 DELAY = 20
 
 class Maze:
@@ -239,15 +248,7 @@ class MazeApp:
         self.width = width
 
         self.dark_mode = True
-        self.bg_color = DARK_BG
-        self.grid_color = DARK_GRID
-        self.wall_color = WALL_COLOR
-        self.path_color = PATH_COLOR  
-        self.start_color = START_COLOR
-        self.end_color = END_COLOR
-        self.visited_color = VISITED_COLOR
-        self.final_path_color = FINAL_PATH_COLOR
-        self.text_color = "white"
+        self.set_colors()
 
         self.algorithm = tk.StringVar(value="bfs")
         self.generation_algorithm = tk.StringVar(value="rbt")
@@ -256,6 +257,10 @@ class MazeApp:
 
         self.canvas = tk.Canvas(master, width=width * CELL_SIZE, height=height * CELL_SIZE, bg=self.bg_color, highlightthickness=0)
         self.canvas.grid(row=0, column=0, columnspan=2)
+
+        # Dark Mode
+        self.dark_mode_button = tk.Button(master, text="Dark Mode", command=self.toggle_dark_mode, bg=self.bg_color, fg=self.text_color)
+        self.dark_mode_button.grid(row=0, column=2, sticky="ew", padx=10, pady=5)
 
         # Left side
         self.btn_generate = tk.Button(master, text="Generate Maze", command=self.generate_maze, bg=self.bg_color, fg=self.text_color)
@@ -307,6 +312,37 @@ class MazeApp:
         tk.Radiobutton(self.generation_frame, text="Kruskals", variable=self.generation_algorithm, value="kruskals", bg=self.bg_color, fg=self.text_color, selectcolor=self.bg_color).pack(anchor="w")
 
         self.generate_maze()
+
+    def set_colors(self):
+        if self.dark_mode:
+            self.bg_color = DARK_BG
+            self.grid_color = DARK_GRID
+            self.wall_color = DARK_WALL_COLOR
+            self.path_color = DARK_PATH_COLOR
+            self.start_color = DARK_START_COLOR
+            self.end_color = DARK_END_COLOR
+            self.visited_color = DARK_VISITED_COLOR
+            self.final_path_color = DARK_FINAL_PATH_COLOR
+            self.current_node_color = DARK_CURRENT_NODE_COLOR
+            self.text_color = "white"
+        else:
+            self.bg_color = LIGHT_BG
+            self.grid_color = LIGHT_GRID
+            self.wall_color = LIGHT_WALL_COLOR
+            self.path_color = LIGHT_PATH_COLOR
+            self.start_color = LIGHT_START_COLOR
+            self.end_color = LIGHT_END_COLOR
+            self.visited_color = LIGHT_VISITED_COLOR
+            self.final_path_color = LIGHT_FINAL_PATH_COLOR
+            self.current_node_color = LIGHT_CURRENT_NODE_COLOR
+            self.text_color = "black"
+
+    def toggle_dark_mode(self):
+        self.dark_mode = not self.dark_mode
+        self.set_colors()
+        self.master.configure(bg=self.bg_color)
+        self.dark_mode_button.configure(bg=self.bg_color, fg=self.text_color)
+        self.draw_maze()
 
     def update_delay(self, value):
         global DELAY
@@ -364,7 +400,7 @@ class MazeApp:
             for x in range(self.maze.width):
                 if self.maze.grid[y][x] == 1:
                     self._draw_cell(x, y, self.wall_color)
-                else:  # Path
+                else:
                     self._draw_cell(x, y, self.path_color)
 
         sx, sy = self.maze.start
@@ -389,7 +425,7 @@ class MazeApp:
             self.draw_maze()
             if self.maze.stack:
                 x, y = self.maze.stack[-1]
-                self._draw_cell(x, y, CURRENT_NODE_COLOR)
+                self._draw_cell(x, y, self.current_node_color)
             self.master.after(DELAY, self.animate_maze_generation)
         else:
             elapsed = (time.perf_counter() - self.generation_start_time) * 1000
@@ -449,7 +485,7 @@ class MazeApp:
                         visited_count += 1
                         prev[neighbor] = current
                         queue.append(neighbor)
-                        self._draw_cell(nx, ny, VISITED_COLOR)
+                        self._draw_cell(nx, ny, self.visited_color)
                 self.master.after(DELAY, step)
             else:
                 print("No path found.")
@@ -485,7 +521,7 @@ class MazeApp:
                         visited_count += 1
                         prev[neighbor] = current
                         stack.append(neighbor)
-                        self._draw_cell(nx, ny, VISITED_COLOR)
+                        self._draw_cell(nx, ny, self.visited_color)
                 self.master.after(DELAY, step)
             else:
                 print("No path found.")
@@ -530,7 +566,7 @@ class MazeApp:
                             g_score[neighbor] = tentative_g
                             f = tentative_g + heuristic(neighbor, end)
                             heapq.heappush(open_set, (f, neighbor))
-                            self._draw_cell(nx, ny, VISITED_COLOR)
+                            self._draw_cell(nx, ny, self.visited_color)
                             visited_count += 1
 
                 self.master.after(DELAY, step)
