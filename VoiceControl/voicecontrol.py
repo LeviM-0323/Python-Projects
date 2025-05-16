@@ -1,6 +1,9 @@
 import speech_recognition as sr
 import pydirectinput
 import time
+import threading
+import tkinter as tk
+import difflib
 
 # for index, name in enumerate(sr.Microphone.list_microphone_names()):
 #     print(f"{index}: {name}")
@@ -43,14 +46,47 @@ combo_command_map = {
 
 PRESS_DURATION = 0.3
 
+def gui_thread():
+    global root, label, last_commands
+    root = tk.Tk()
+    root.title("Voice Command")
+    root.attributes('-topmost', True)
+    root.geometry("300x100+20+20")
+    root.resizable(False, False)
+    root.overrideredirect(True)
+    label = tk.Label(root, text="Say a command...", font=("Arial", 12), justify="left", anchor="nw")
+    label.pack(expand=True, fill='both')
+    root.mainloop()
+
+def update_gui(text):
+    if label.winfo_exists():
+        last_commands.append(text)
+        if len(last_commands) > 5:
+            last_commands.pop(0)
+        label.config(text="\n".join(last_commands))
+
+last_commands = []
+
+threading.Thread(target=gui_thread, daemon=True).start()
+
 while True:
     try:
         with sr.Microphone() as source:
             recognizer.adjust_for_ambient_noise(source, duration=1)
             recognizer.pause_threshold = 0.5
             audio = recognizer.listen(source)
-            command = recognizer.recognize_google(audio, language="en-US")
+            try:
+                command = recognizer.recognize_google(audio, language="en-US")
+            except sr.UnknownValueError:
+                continue
+            
             command = command.lower()
+            last_command = command
+
+            try:
+                update_gui(command)
+            except Exception:
+                pass
             print(f"{command}")
 
             for phrase, keys in combo_command_map.items():
@@ -59,7 +95,8 @@ while True:
                         pydirectinput.keyDown(key)
                     time.sleep(PRESS_DURATION)
                     for key in keys:
-                        pydirectinput.keyUp(key)  
+                        pydirectinput.keyUp(key) 
+                    break
 
             if "look left" in command:
                 pydirectinput.keyDown('left')
@@ -83,7 +120,8 @@ while True:
                         pydirectinput.keyDown(key)
                         time.sleep(PRESS_DURATION)
                         pydirectinput.keyUp(key)
-            
-    except sr.UnknownValueError:
+                        break
+
+    except Exception as e:
         recognizer = sr.Recognizer()
         continue
