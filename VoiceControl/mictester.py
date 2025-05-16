@@ -10,7 +10,7 @@ while True:
             
             recognizer.adjust_for_ambient_noise(source, duration=0.2)
             audio = recognizer.listen(source)            
-            text = recognizer.recognize_sphinx(audio)
+            text = recognizer.recognize_google(audio)
             text = text.lower()
 
             print(f"You said: {text}")
