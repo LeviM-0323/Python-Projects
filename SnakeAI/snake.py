@@ -233,6 +233,7 @@ def get_random_action(current_direction):
     return random.choice(actions)
 
 if __name__ == "__main__":
+    log_file = open("training_log.txt", "a")
     use_ai = True
     actions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
     agent = QLearningAgent(actions)
@@ -254,4 +255,8 @@ if __name__ == "__main__":
             total_reward += reward
 
         print(f"Episode {episode} | Score: {game.score} | Total Reward: {total_reward} | Epsilon: {agent.epsilon:.3f}")
+        log_file.write(f"Episode {episode} | Score: {game.score} | Total Reward: {total_reward} | Epsilon: {agent.epsilon:.3f}\n")
+        log_file.flush()  # Ensure it's written to disk
         time.sleep(0.1)
+
+    log_file.close()
