@@ -1,0 +1,5 @@
+tensorflow
+pygame
+numpy
+matplotlib
+scikit-learn
