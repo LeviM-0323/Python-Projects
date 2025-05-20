@@ -3,7 +3,7 @@ import time
 import random
 import numpy as np
 
-snake_speed = 15
+snake_speed = 20
 
 window_x = 480
 window_y = 360
