@@ -1,5 +1,4 @@
-tensorflow
 pygame
+random
 numpy
-matplotlib
-scikit-learn
+pickle

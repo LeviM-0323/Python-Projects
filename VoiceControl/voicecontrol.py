@@ -44,7 +44,7 @@ combo_command_map = {
     "run right": ['shift', 'd'],
 }
 
-PRESS_DURATION = 0.3
+PRESS_DURATION = 0.2
 
 def gui_thread():
     global root, label, last_commands

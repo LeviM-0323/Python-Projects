@@ -2,11 +2,16 @@ import pygame
 import time
 import random
 import numpy as np
+import pickle
 
+<<<<<<< HEAD
 snake_speed = 20
+=======
+snake_speed = 10
+>>>>>>> 4f0e0314459eeb092b7af844ac54b0d575b0b546
 
-window_x = 480
-window_y = 360
+window_x = 200
+window_y = 200 
 
 black = pygame.Color(0,0,0)
 white = pygame.Color(255,255,255)
@@ -14,34 +19,45 @@ red = pygame.Color(255,0,0)
 green = pygame.Color(0,255,0)
 blue = pygame.Color(0,0,255)
 
+SEGMENT_SIZE = 20 
+
 class SnakeGame:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("AI Snake")
         self.game_window = pygame.display.set_mode((window_x, window_y))
         self.fps = pygame.time.Clock()
+        self.max_length = (window_x // SEGMENT_SIZE) * (window_y // SEGMENT_SIZE) - 1
+        self.winner_found = False
         self.reset()
 
-    def reset(self):
-        self.snake_position = [100, 50]
-        self.snake_body = [
-            [100, 50],
-            [90, 50],
-            [80, 50],
-            [70, 50]
+    def _spawn_fruit(self):
+        possible_positions = [
+            [x * SEGMENT_SIZE, y * SEGMENT_SIZE]
+            for x in range(window_x // SEGMENT_SIZE)
+            for y in range(window_y // SEGMENT_SIZE)
+            if [x * SEGMENT_SIZE, y * SEGMENT_SIZE] not in self.snake_body
         ]
-        self.fruit_position = [random.randrange(1, (window_x//10)) * 10,
-                               random.randrange(1, (window_y//10)) * 10]
+        self.fruit_position = random.choice(possible_positions)
+
+    def reset(self):
+        self.snake_position = [SEGMENT_SIZE * 5, SEGMENT_SIZE * 5]
+        self.snake_body = [
+            [SEGMENT_SIZE * 5, SEGMENT_SIZE * 5],
+            [SEGMENT_SIZE * 4, SEGMENT_SIZE * 5],
+            [SEGMENT_SIZE * 3, SEGMENT_SIZE * 5],
+        ]
+        self._spawn_fruit()
         self.fruit_spawn = True
         self.direction = 'RIGHT'
         self.change_to = self.direction
         self.score = 0
         self.game_over_flag = False
-        # Return initial state
+        self.winner_found = False  
         return self._get_state()
 
     def step(self, action=None):
-        reward = -0.1  # Small negative reward for each step
+        reward = -0.1 
         prev_distance = abs(self.snake_position[0] - self.fruit_position[0]) + abs(self.snake_position[1] - self.fruit_position[1])
         if action:
             self.change_to = action
@@ -67,70 +83,81 @@ class SnakeGame:
             self.direction = 'RIGHT'
 
         if self.direction == 'UP':
-            self.snake_position[1] -= 10
+            self.snake_position[1] -= SEGMENT_SIZE
         if self.direction == 'DOWN':
-            self.snake_position[1] += 10
+            self.snake_position[1] += SEGMENT_SIZE
         if self.direction == 'LEFT':
-            self.snake_position[0] -= 10
+            self.snake_position[0] -= SEGMENT_SIZE
         if self.direction == 'RIGHT':
-            self.snake_position[0] += 10
+            self.snake_position[0] += SEGMENT_SIZE
 
         self.snake_body.insert(0, list(self.snake_position))
         if self.snake_position[0] == self.fruit_position[0] and self.snake_position[1] == self.fruit_position[1]:
             self.score += 10
-            reward = 100  # reward for eating fruit
+            reward = 100
             self.fruit_spawn = False
+            if len(self.snake_body) >= self.max_length:
+                self.winner_found = True
+                self.game_over_flag = True
+                reward = 1000
         else:
             self.snake_body.pop()
 
         if not self.fruit_spawn:
-            self.fruit_position = [random.randrange(1, (window_x//10)) * 10,
-                                   random.randrange(1, (window_y//10)) * 10]
+            self._spawn_fruit()
         self.fruit_spawn = True
 
-        # Optional: reward for getting closer to the fruit
         new_distance = abs(self.snake_position[0] - self.fruit_position[0]) + abs(self.snake_position[1] - self.fruit_position[1])
         if new_distance < prev_distance:
-            reward += 0.1  # smaller bonus for moving closer
+            reward += 0.1
 
         self.game_window.fill(black)
         for pos in self.snake_body:
-            pygame.draw.rect(self.game_window, green, pygame.Rect(pos[0], pos[1], 10, 10))
-        pygame.draw.rect(self.game_window, white, pygame.Rect(self.fruit_position[0], self.fruit_position[1], 10, 10))
+            pygame.draw.rect(self.game_window, green, pygame.Rect(pos[0], pos[1], SEGMENT_SIZE, SEGMENT_SIZE))
+            pygame.draw.rect(self.game_window, black, pygame.Rect(pos[0], pos[1], SEGMENT_SIZE, SEGMENT_SIZE), 1)
 
-        # Check for game over
-        if (self.snake_position[0] < 0 or self.snake_position[0] > window_x-10 or
-            self.snake_position[1] < 0 or self.snake_position[1] > window_y-10):
+        pygame.draw.rect(self.game_window, red, pygame.Rect(self.fruit_position[0], self.fruit_position[1], SEGMENT_SIZE, SEGMENT_SIZE))
+
+        if (self.snake_position[0] < 0 or self.snake_position[0] > window_x-SEGMENT_SIZE or
+            self.snake_position[1] < 0 or self.snake_position[1] > window_y-SEGMENT_SIZE):
             self.game_over_flag = True
-            reward = -10  # penalty for dying
+            reward = -10 
         for block in self.snake_body[1:]:
             if self.snake_position[0] == block[0] and self.snake_position[1] == block[1]:
                 self.game_over_flag = True
-                reward = -10  # penalty for dying
+                reward = -10 
 
         self.show_score(1, white, 'times new roman', 20)
         pygame.display.update()
         self.fps.tick(snake_speed)
 
-        # Return state, reward, done, info
+        if self.winner_found:
+            self.show_winner()
+            print("Winner found")
+            pygame.display.update()
+            time.sleep(3) 
+
         return self._get_state(), reward, self.game_over_flag, {}
+
+    def show_winner(self):
+        font = pygame.font.SysFont('times new roman', 40)
+        winner_surface = font.render('Winner found!', True, blue)
+        winner_rect = winner_surface.get_rect(center=(window_x // 2, window_y // 2))
+        self.game_window.blit(winner_surface, winner_rect)
 
     def _get_state(self):
         head_x, head_y = self.snake_position
         fruit_x, fruit_y = self.fruit_position
 
-        # Danger straight, right, left
         danger_straight = self._danger_in_direction(self.direction)
         danger_right = self._danger_in_direction(self._turn_right(self.direction))
         danger_left = self._danger_in_direction(self._turn_left(self.direction))
 
-        # Fruit location relative to head
         fruit_left = fruit_x < head_x
         fruit_right = fruit_x > head_x
         fruit_up = fruit_y < head_y
         fruit_down = fruit_y > head_y
 
-        # State as a tuple of booleans
         return (
             danger_straight,
             danger_right,
@@ -145,17 +172,15 @@ class SnakeGame:
     def _danger_in_direction(self, direction):
         x, y = self.snake_position
         if direction == 'UP':
-            y -= 10
+            y -= SEGMENT_SIZE
         elif direction == 'DOWN':
-            y += 10
+            y += SEGMENT_SIZE
         elif direction == 'LEFT':
-            x -= 10
+            x -= SEGMENT_SIZE
         elif direction == 'RIGHT':
-            x += 10
-        # Check wall collision
+            x += SEGMENT_SIZE
         if x < 0 or x >= window_x or y < 0 or y >= window_y:
             return True
-        # Check self collision
         if [x, y] in self.snake_body:
             return True
         return False
@@ -185,11 +210,11 @@ class SnakeGame:
 
 class QLearningAgent:
     def __init__(self, actions, alpha=0.1, gamma=0.9, epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01):
-        self.q_table = {}  # state -> action values
+        self.q_table = {}
         self.actions = actions
-        self.alpha = alpha      # learning rate
-        self.gamma = gamma      # discount factor
-        self.epsilon = epsilon  # exploration rate
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
 
@@ -215,13 +240,29 @@ class QLearningAgent:
         else:
             q_target = reward + self.gamma * max(self.q_table[next_state_key].values())
         self.q_table[state_key][action] += self.alpha * (q_target - q_predict)
-        # Decay epsilon
         if done and self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+    def save(self, filename="q_table.pkl"):
+        data = {
+            "q_table": self.q_table,
+            "epsilon": self.epsilon
+        }
+        with open(filename, "wb") as f:
+            pickle.dump(data, f)
+
+    def load(self, filename="q_table.pkl"):
+        try:
+            with open(filename, "rb") as f:
+                data = pickle.load(f)
+                self.q_table = data.get("q_table", {})
+                self.epsilon = data.get("epsilon", 1.0)
+        except FileNotFoundError:
+            self.q_table = {}
+            self.epsilon = 1.0
+
 def get_random_action(current_direction):
     actions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
-    # Prevent the snake from reversing directly
     if current_direction == 'UP':
         actions.remove('DOWN')
     elif current_direction == 'DOWN':
@@ -234,9 +275,12 @@ def get_random_action(current_direction):
 
 if __name__ == "__main__":
     log_file = open("training_log.txt", "a")
+    log_file.write("\n----------------------NEXT RUN-------------------\n")
+    log_file.flush()
     use_ai = True
     actions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
     agent = QLearningAgent(actions)
+    agent.load("q_table.pkl")
     episode = 0
 
     while True:
@@ -256,7 +300,8 @@ if __name__ == "__main__":
 
         print(f"Episode {episode} | Score: {game.score} | Total Reward: {total_reward} | Epsilon: {agent.epsilon:.3f}")
         log_file.write(f"Episode {episode} | Score: {game.score} | Total Reward: {total_reward} | Epsilon: {agent.epsilon:.3f}\n")
-        log_file.flush()  # Ensure it's written to disk
+        log_file.flush()
+        agent.save("q_table.pkl")
         time.sleep(0.1)
 
     log_file.close()

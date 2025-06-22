@@ -1,0 +1,4 @@
+SpeechRecognition
+pydirectinput
+difflib
+pyaudio
