@@ -4,7 +4,11 @@ import random
 import numpy as np
 import pickle
 
+<<<<<<< HEAD
+snake_speed = 20
+=======
 snake_speed = 10
+>>>>>>> 4f0e0314459eeb092b7af844ac54b0d575b0b546
 
 window_x = 200
 window_y = 200 
