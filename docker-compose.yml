@@ -1,0 +1,7 @@
+services:
+  snake:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container-name: SnakeAI
+    restart: unless-stopped
